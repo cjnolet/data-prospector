@@ -1,8 +1,8 @@
 package sonixbp.support;
 
-import cloudbase.core.data.Mutation;
-import cloudbase.core.data.Value;
-import cloudbase.core.security.ColumnVisibility;
+import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.security.ColumnVisibility;
 import org.apache.hadoop.io.Text;
 import sonixbp.TripleValueType;
 import sonixbp.domain.Triple;
