@@ -1,62 +1,151 @@
 package sonixbp.controllers;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import sonixbp.TripleValueType;
+import sonixbp.domain.SchemaSnapshot;
+import sonixbp.domain.TripleIndexDescription;
+import sonixbp.services.ProspectService;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.*;
 
 @Controller()
 public class ProspectorController {
+
+    private static final Integer MAX_RESULTS = 50;
+
+    ProspectService service;
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    public void setProspectService(ProspectService service) {
+
+        this.service = service;
+    }
+
 
     /**
      * Lists the prospects in storage (most recent will be first in list). Most recent is returned
      * if maxResults is null
      * @param maxResults
+     * @param startTime
+     * @param stopTime
      * @return
+     * @throws IOException
      */
-    @RequestMapping(value = "/list", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public String listProspects(@RequestParam(required = false) Integer maxResults) {
+    public String listProspects(@RequestParam(required = false) Integer maxResults,
+                                @RequestParam(required = false) Long startTime,
+                                @RequestParam(required = false) Long stopTime) throws IOException {
+
+        // by default, if they pass in a stop time without a start time, return the past 24 hours.
+        if(startTime == null && stopTime != null) {
+            startTime = stopTime - (1000 * 60 * 60 * 24);
+        }
+
+        else if(startTime != null && stopTime == null) {
+            stopTime = System.currentTimeMillis();
+        }
+
+        System.out.println(String.format("%d-%d", startTime, stopTime));
+
+        Iterator<Long> prospectIter = startTime == null ? service.getProspects() :
+                service.getProspectsInRange(startTime, stopTime);
+
+        Collection<Long> prospects = new ArrayList<Long>();
 
         if(maxResults == null) {
-            return "no max results";
+
+            if(prospectIter.hasNext()) {
+                prospects.add(prospectIter.next());
+            }
         }
 
         else {
 
-            return Integer.toString(maxResults);
+            int count = 0;
+            while(count < maxResults && prospectIter.hasNext()) {
+
+                prospects.add(prospectIter.next());
+                count++;
+            }
         }
+
+        return objectMapper.writeValueAsString(prospects);
     }
 
     /**
      * Gets a schema for a list of prospect times (or most recent prospect if no times specified)
      * @param prospectTimes
+     * @param schemeAndType
+     * @param dataType
      * @return
+     * @throws IOException
      */
     @RequestMapping(value = "/schema", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public String getSchema(@RequestParam(required = false) Collection<Long> prospectTimes) {
+    public String getSchema(@RequestParam(required = false) List<Long> prospectTimes,
+                            @RequestParam(required = true)  String schemeAndType,
+                            @RequestParam(required = false) String dataType) throws IOException {
 
+        Collection<SchemaSnapshot> snapshots = new ArrayList<SchemaSnapshot>();
         if(prospectTimes != null) {
-            return "TIMES: " + prospectTimes.toString();
+
+            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, null));
         }
 
         else {
-            return "NO input times";
+
+            Iterator<Long> prospectIter = service.getProspects();
+            if(prospectIter.hasNext()) {
+                snapshots.add(service.getSchemaSnapshot(prospectIter.next(), schemeAndType, dataType));
+            }
         }
+
+        return objectMapper.writeValueAsString(snapshots);
     }
 
     /**
-     * Gets a schema
-     * @param prospectTimes
+     *
+     * @param prospectTime
+     * @param maxResults
+     * @param predicate
+     * @param dataType
      * @return
+     * @throws IOException
      */
     @RequestMapping(value = "/schemaReverse", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public String getSchemaReverse(@RequestParam(required = false) Collection<Long> prospectTimes) {
+    public String getSchemaReverse(@RequestParam(required = false) Long prospectTime,
+                                   @RequestParam(required = false) Integer maxResults,
+                                   @RequestParam(required = true)  String predicate,
+                                   @RequestParam(required = false) String dataType) throws IOException {
 
-        return "TIMES: " + prospectTimes.toString();
+        if(prospectTime == null) {
+
+            prospectTime = service.getProspects().next();
+        }
+
+        Iterator<String> subjs = service.getTypesContainingPredicate(prospectTime, predicate, dataType);
+
+        Collection<String> subjects = new ArrayList<String>();
+        if(maxResults == null) {
+
+            maxResults = MAX_RESULTS;
+        }
+
+        int count = 0;
+        while(count < maxResults && subjs.hasNext()) {
+            subjects.add(subjs.next());
+            count++;
+        }
+
+        return objectMapper.writeValueAsString(subjects);
     }
 
 
@@ -64,20 +153,41 @@ public class ProspectorController {
      *
      * @param indexType
      * @param index
+     * @param maxResults
+     * @param dataType
      * @return
+     * @throws IOException
      */
     @RequestMapping(value = "/matches", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public String getMatches(@RequestParam(required = false) TripleValueType indexType,
-                             @RequestParam(required = true)  String index) {
+                             @RequestParam(required = true)  String index,
+                             @RequestParam(required = false) Integer maxResults,
+                             @RequestParam(required = false)  String dataType) throws IOException {
 
-        return "MATCHES";
+        if(maxResults == null) {
+            maxResults = MAX_RESULTS;
+        }
+
+        Iterator<TripleIndexDescription> indexItr;
+        indexItr = service.getMatchesForPartialIndex(indexType, index, dataType);
+
+        Collection<TripleIndexDescription> descriptions = new ArrayList<TripleIndexDescription>();
+
+        int count = 0;
+        while(count < maxResults && indexItr.hasNext()) {
+
+            descriptions.add(indexItr.next());
+        }
+
+        return objectMapper.writeValueAsString(descriptions);
     }
 
     /**
      *
-     * @param indexType
+     * @param prospectTimes
      * @param index
+     * @param indexType
      * @return
      */
     @RequestMapping(value = "/count", method = RequestMethod.GET, produces = "application/json")

@@ -10,6 +10,11 @@
     <context:annotation-config/>
     <context:component-scan base-package="sonixbp.controllers" />
 
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+            <property name="prefix" value="/views/"/>
+            <property name="suffix" value=".html"/>
+    </bean>
+
 </beans>
                     
                 

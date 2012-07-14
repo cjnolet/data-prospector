@@ -7,5 +7,9 @@
                            http://www.springframework.org/schema/context
                            http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <bean id="prospectService" class="sonixbp.services.impl.MockProspectService"/>
+
+
+
 </beans>
 
