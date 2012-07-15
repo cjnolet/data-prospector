@@ -14,7 +14,7 @@ import java.util.Collection;
  *
  *  R				                        CF				 CQ				V
 
-    TOP LEVEL INDEX (shows all available subject/predicate/objects)
+    TOP LEVEL INDEX (shows all available [unserialized] subject/predicate/objects)
     index\x00//subject		                subject			dataType
     index\x00//predicate	                predicate		dataType
     index\x00//object		                object			dataType
@@ -34,14 +34,14 @@ import java.util.Collection;
 public class ProspectorMutationFactory {
 
     private static Value EMPTY = new Value("".getBytes());
-    private static String DELIM = "\u0000";
+    public static String DELIM = "\u0000";
 
-    private static String INDEX = "index";
-    private static String COUNT = "count";
-    private static String SCHEMA = "schema";
-    private static String SCHEMA_REVERSE = "schemaReverse";
-    private static String METADATA = "metadata";
-    private static String PROSPECT_TIME = "prospectTime";
+    public static String INDEX = "index";
+    public static String COUNT = "count";
+    public static String SCHEMA = "schema";
+    public static String SCHEMA_REVERSE = "schemaReverse";
+    public static String METADATA = "metadata";
+    public static String PROSPECT_TIME = "prospectTime";
 
     final Triple triple;
     final long prospectTime;

@@ -1,5 +1,6 @@
 package sonixbp.controllers;
 
+import org.apache.accumulo.core.security.Authorizations;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,8 +55,9 @@ public class ProspectorController {
 
         System.out.println(String.format("%d-%d", startTime, stopTime));
 
-        Iterator<Long> prospectIter = startTime == null ? service.getProspects() :
-                service.getProspectsInRange(startTime, stopTime);
+
+        Iterator<Long> prospectIter = startTime == null ? service.getProspects(new Authorizations()) :
+                service.getProspectsInRange(startTime, stopTime, new Authorizations());
 
         Collection<Long> prospects = new ArrayList<Long>();
 
@@ -81,6 +83,7 @@ public class ProspectorController {
 
     /**
      * Gets a schema for a list of prospect times (or most recent prospect if no times specified)
+     * Optional datatype will only return predicates of that type.
      * @param prospectTimes
      * @param schemeAndType
      * @param dataType
@@ -96,14 +99,14 @@ public class ProspectorController {
         Collection<SchemaSnapshot> snapshots = new ArrayList<SchemaSnapshot>();
         if(prospectTimes != null) {
 
-            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, null));
+            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, null, new Authorizations()));
         }
 
         else {
 
-            Iterator<Long> prospectIter = service.getProspects();
+            Iterator<Long> prospectIter = service.getProspects(new Authorizations());
             if(prospectIter.hasNext()) {
-                snapshots.add(service.getSchemaSnapshot(prospectIter.next(), schemeAndType, dataType));
+                snapshots.add(service.getSchemaSnapshot(prospectIter.next(), schemeAndType, dataType, new Authorizations()));
             }
         }
 
@@ -111,7 +114,8 @@ public class ProspectorController {
     }
 
     /**
-     *
+     * Returns the scheme/type pairs that contain a specific predicate. Datatype is optional but should be included
+     * if predicate is assumed to be a type other than string literal or uri literal.
      * @param prospectTime
      * @param maxResults
      * @param predicate
@@ -128,10 +132,10 @@ public class ProspectorController {
 
         if(prospectTime == null) {
 
-            prospectTime = service.getProspects().next();
+            prospectTime = service.getProspects(new Authorizations()).next();
         }
 
-        Iterator<String> subjs = service.getTypesContainingPredicate(prospectTime, predicate, dataType);
+        Iterator<String> subjs = service.getTypesContainingPredicate(prospectTime, predicate, dataType, new Authorizations());
 
         Collection<String> subjects = new ArrayList<String>();
         if(maxResults == null) {
@@ -150,7 +154,7 @@ public class ProspectorController {
 
 
     /**
-     *
+     * Performs a fuzzy match on
      * @param indexType
      * @param index
      * @param maxResults
@@ -170,7 +174,7 @@ public class ProspectorController {
         }
 
         Iterator<TripleIndexDescription> indexItr;
-        indexItr = service.getMatchesForPartialIndex(indexType, index, dataType);
+        indexItr = service.getMatchesForPartialIndex(indexType, index, dataType, new Authorizations());
 
         Collection<TripleIndexDescription> descriptions = new ArrayList<TripleIndexDescription>();
 
@@ -194,7 +198,8 @@ public class ProspectorController {
     @ResponseBody
     public String getTripleCount(@RequestParam(required = false) Collection<Long> prospectTimes,
                                  @RequestParam(required = true)  String index,
-                                 @RequestParam(required = true)  TripleValueType indexType) {
+                                 @RequestParam(required = true)  TripleValueType indexType,
+                                 @RequestParam(required = false) String dataType) {
 
         return "COUNT";
     }

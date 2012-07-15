@@ -1,5 +1,6 @@
 package sonixbp.services;
 
+import org.apache.accumulo.core.security.Authorizations;
 import sonixbp.TripleValueType;
 import sonixbp.domain.SchemaSnapshot;
 import sonixbp.domain.TripleIndexCount;
@@ -15,7 +16,7 @@ public interface ProspectService {
      * Gets an iterator with the prospects- most recent prospects come back first
      * @return
      */
-    Iterator<Long> getProspects();
+    Iterator<Long> getProspects(Authorizations auths);
 
     /**
      * Gets an iterator with the prospects that occurred in a specific time range (most recent returned first)
@@ -23,7 +24,7 @@ public interface ProspectService {
      * @param endTime
      * @return
      */
-    Iterator<Long> getProspectsInRange(long beginTime, long endTime);
+    Iterator<Long> getProspectsInRange(long beginTime, long endTime, Authorizations auths);
 
     /**
      * Gets a collection of schema snapshots given a list of prospect times for a specific scheme/type pair.
@@ -33,7 +34,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    Collection<SchemaSnapshot> getSchemaSnapshots(List<Long> prospectTimes, String subject, String dataType);
+    Collection<SchemaSnapshot> getSchemaSnapshots(List<Long> prospectTimes, String subject, String dataType, Authorizations auths);
 
     /**
      * Gets a schema snapshot for a single run of the prospector for a specific scheme/type pair.
@@ -43,7 +44,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    SchemaSnapshot getSchemaSnapshot(Long prospectTime, String typeAndScheme, String dataType);
+    SchemaSnapshot getSchemaSnapshot(Long prospectTime, String typeAndScheme, String dataType, Authorizations auths);
 
     /**
      * Gets an iterator containing all scheme/type pairs that contain the given preciate for the given prospect time.
@@ -53,7 +54,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    Iterator<String> getTypesContainingPredicate(Long prospectTime, String predicate, String dataType);
+    Iterator<String> getTypesContainingPredicate(Long prospectTime, String predicate, String dataType, Authorizations auths);
 
     /**
      * Returns a collection containing the counts for a given index (s/p/o) for a list of prospect times.
@@ -64,7 +65,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    Collection<TripleIndexCount> getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType);
+    Collection<TripleIndexCount> getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns a count for a given index (s/p/o) for a single prospect time.
@@ -75,7 +76,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    TripleIndexCount getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType);
+    TripleIndexCount getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns the matches for a partial index (starts-with search). An optional TripleValueType and datatype can
@@ -85,7 +86,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    Iterator<TripleIndexDescription> getMatchesForPartialIndex(TripleValueType type, String partialIndex, String dataType);
+    Iterator<TripleIndexDescription> getMatchesForPartialIndex(TripleValueType type, String partialIndex, String dataType, Authorizations auths);
 
 
 }

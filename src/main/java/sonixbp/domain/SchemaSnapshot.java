@@ -1,6 +1,7 @@
 package sonixbp.domain;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class SchemaSnapshot {
@@ -9,10 +10,14 @@ public class SchemaSnapshot {
     long prospectTime;
     Collection<PredicateDescription> predicates;
 
-    public SchemaSnapshot(String schemeAndType, long prospectTime, Collection<PredicateDescription> predicates) {
+    public SchemaSnapshot(String schemeAndType, long prospectTime) {
         this.schemeAndType = schemeAndType;
         this.prospectTime = prospectTime;
-        this.predicates = predicates;
+        this.predicates = new ArrayList<PredicateDescription>();
+    }
+
+    public void addPredicate(PredicateDescription description) {
+        predicates.add(description);
     }
 
     public String getSchemeAndType() {
