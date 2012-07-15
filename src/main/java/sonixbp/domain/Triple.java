@@ -3,6 +3,14 @@ package sonixbp.domain;
 
 public class Triple {
 
+    public Triple(String subject, String predicate, String object, String type, String visibility) {
+        this.subject = subject;
+        this.predicate = predicate;
+        this.object = object;
+        this.type = type;
+        this.visibility = visibility;
+    }
+
     String subject;
     String predicate;
     String object;

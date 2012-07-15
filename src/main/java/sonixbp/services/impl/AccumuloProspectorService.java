@@ -122,6 +122,8 @@ public class AccumuloProspectorService implements ProspectService {
                             ProspectorMutationFactory.DELIM + time));
             }
 
+            scanner.setRanges(ranges);
+
             if(dataType != null) {
 
                 IteratorSetting setting = new IteratorSetting(15, "regex", RegExFilter.class);
@@ -136,9 +138,12 @@ public class AccumuloProspectorService implements ProspectService {
                 String predicate = entry.getKey().getColumnFamily().toString();
                 String type = entry.getKey().getColumnQualifier().toString();
 
+                System.out.println(entry);
+
                 SchemaSnapshot snapshot = snapshots.get(prospectTime);
                 if(snapshot == null) {
                     snapshot = new SchemaSnapshot(subject, prospectTime);
+                    snapshots.put(prospectTime, snapshot);
                 }
 
                 PredicateDescription description = new PredicateDescription(predicate,
@@ -175,16 +180,15 @@ public class AccumuloProspectorService implements ProspectService {
 
             Map<Long, SchemaSnapshot> snapshots = new HashMap<Long, SchemaSnapshot>();
 
-            Scanner scanner = connector.createScanner(Constants.PROSPECTOR_TABLE, auths);
+            final Scanner scanner = connector.createScanner(Constants.PROSPECTOR_TABLE, auths);
 
             scanner.setRange(new Range(ProspectorMutationFactory.SCHEMA_REVERSE + ProspectorMutationFactory.DELIM +
                                        predicate + ProspectorMutationFactory.DELIM + prospectTime));
 
-
             if(dataType != null) {
 
                 IteratorSetting setting = new IteratorSetting(15, "regex", RegExFilter.class);
-                setting.addOption(RegExFilter.COLF_REGEX, dataType);
+                setting.addOption(RegExFilter.COLQ_REGEX, dataType);
 
                 scanner.addScanIterator(setting);
             }
@@ -196,27 +200,34 @@ public class AccumuloProspectorService implements ProspectService {
                 String currentSubject;
                 String nextSubject;
 
+                boolean hasNext;
+
                 public boolean hasNext() {
 
                     if(nextSubject == null) {
 
-                        while(iterator.hasNext() && nextSubject.equals(currentSubject)) {
+                        while(iterator.hasNext() && (nextSubject == null || nextSubject.equals(currentSubject))) {
 
-                            nextSubject = iterator.next().getKey().getColumnQualifier().toString();
+                            nextSubject = iterator.next().getKey().getColumnFamily().toString();
                         }
 
-                        if(!iterator.hasNext()) {
-                            currentSubject = null;
-                            return false;
+                        if(nextSubject != null && !nextSubject.equals(currentSubject)) {
+
+                            hasNext = true;
                         }
+
+                        else {
+
+                            hasNext =  false;
+                        }
+
                     }
 
-                    return true;
+                    return hasNext;
                 }
 
                 public String next() {
 
-                    String tmp = currentSubject;
                     currentSubject = nextSubject;
                     nextSubject = null;
 

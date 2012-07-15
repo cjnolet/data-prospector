@@ -15,6 +15,8 @@ public class TripleIndexCount {
         this.index = index;
         this.count = count;
         this.prospectTime = prospectTime;
+
+
     }
 
     public TripleValueType getType() {

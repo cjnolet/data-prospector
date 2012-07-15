@@ -86,7 +86,7 @@ public class ProspectorMutationFactory {
         Mutation reverseSchemaMutation = new Mutation(SCHEMA_REVERSE + DELIM + triple.getPredicate() + DELIM + prospectTime);
 
         schemaMutation.put(new Text(triple.getPredicate()), new Text(triple.getType()), new ColumnVisibility(triple.getVisibility()), prospectTime, EMPTY);
-        reverseSchemaMutation.put(new Text(triple.getType()), new Text(triple.getSubject()), new ColumnVisibility(triple.getVisibility()), prospectTime, EMPTY);
+        reverseSchemaMutation.put(new Text(schemeAndType), new Text(triple.getType()), new ColumnVisibility(triple.getVisibility()), prospectTime, EMPTY);
 
         return Arrays.asList(new Mutation[] { schemaMutation, reverseSchemaMutation });
     }

@@ -1,12 +1,5 @@
 package sonixbp.domain;
 
-/**
- * Created by IntelliJ IDEA.
- * User: cnolet
- * Date: 7/13/12
- * Time: 9:44 PM
- * To change this template use File | Settings | File Templates.
- */
 public class PredicateDescription {
 
     String predicate;
