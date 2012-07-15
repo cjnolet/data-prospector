@@ -4,6 +4,7 @@ import org.apache.accumulo.core.security.Authorizations;
 import sonixbp.TripleValueType;
 import sonixbp.domain.SchemaSnapshot;
 import sonixbp.domain.TripleIndexCount;
+import sonixbp.domain.TripleIndexCountDescription;
 import sonixbp.domain.TripleIndexDescription;
 
 import java.util.Collection;
@@ -66,7 +67,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    TripleIndexDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths);
+    TripleIndexCountDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns a count for a given index (s/p/o) for a single prospect time.
@@ -78,7 +79,7 @@ public interface ProspectService {
      * @param dataType
      * @return
      */
-    TripleIndexDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths);
+    TripleIndexCountDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns the matches for a partial index (starts-with search). An optional TripleValueType and datatype can

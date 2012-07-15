@@ -9,23 +9,12 @@ public class TripleIndexDescription {
 
     private String index;
     private TripleValueType type;
-    List<TripleIndexCount> counts;
     private String dataType;
 
     public TripleIndexDescription(String index, TripleValueType type, String dataType) {
         this.index = index;
         this.type = type;
         this.dataType = dataType;
-        this.counts = new ArrayList<TripleIndexCount>();
-    }
-
-    public List<TripleIndexCount> getCounts() {
-        return counts;
-    }
-
-
-    public void addIndexCount(TripleIndexCount count) {
-        this.counts.add(count);
     }
 
     public String getDataType() {

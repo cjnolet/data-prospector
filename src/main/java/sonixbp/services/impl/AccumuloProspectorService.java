@@ -12,10 +12,7 @@ import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sonixbp.TripleValueType;
-import sonixbp.domain.PredicateDescription;
-import sonixbp.domain.SchemaSnapshot;
-import sonixbp.domain.TripleIndexCount;
-import sonixbp.domain.TripleIndexDescription;
+import sonixbp.domain.*;
 import sonixbp.services.ProspectService;
 import sonixbp.support.Constants;
 import sonixbp.support.ProspectorMutationFactory;
@@ -251,7 +248,7 @@ public class AccumuloProspectorService implements ProspectService {
         return null;
     }
 
-    public TripleIndexDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexCountDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
 
         Validate.notNull(type);
         Validate.notNull(prospectTimes);
@@ -261,7 +258,7 @@ public class AccumuloProspectorService implements ProspectService {
         Validate.notNull(auths);
 
         List<TripleIndexCount> indexCounts = new ArrayList<TripleIndexCount>();
-        TripleIndexDescription description = new TripleIndexDescription(index, type,  dataType);
+        TripleIndexCountDescription description = new TripleIndexCountDescription(index, type,  dataType);
 
         try {
 
@@ -297,12 +294,61 @@ public class AccumuloProspectorService implements ProspectService {
         return description;
     }
 
-    public TripleIndexDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexCountDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
 
         return getCountsForIndex(Arrays.asList(new Long[] { prospectTime }), type, index, dataType, auths);
     }
 
     public Iterator<TripleIndexDescription> getMatchesForPartialIndex(TripleValueType type, String partialIndex, String dataType, Authorizations auths) {
+
+        try {
+
+            final Scanner scanner = connector.createScanner(Constants.PROSPECTOR_TABLE, auths);
+
+            scanner.setRange(new Range(ProspectorMutationFactory.INDEX + ProspectorMutationFactory.DELIM + partialIndex,
+                    ProspectorMutationFactory.INDEX + ProspectorMutationFactory.DELIM + partialIndex + "\uffff"));
+
+            IteratorSetting setting = new IteratorSetting(15, "regex", RegExFilter.class);
+
+
+            if(type != null) {
+
+                setting.addOption(RegExFilter.COLF_REGEX, type.toString());
+            }
+
+            if(dataType != null) {
+
+                setting.addOption(RegExFilter.COLQ_REGEX, dataType);
+            }
+
+            scanner.addScanIterator(setting);
+            final Iterator<Map.Entry<Key,Value>> iterator = scanner.iterator();
+
+            return new Iterator<TripleIndexDescription>() {
+
+                public boolean hasNext() {
+
+                    return iterator.hasNext();
+                }
+
+                public TripleIndexDescription next() {
+
+                    Map.Entry<Key,Value> entry = iterator.next();
+                    String theIndex = entry.getKey().getRow().toString().split(ProspectorMutationFactory.DELIM)[1];
+
+                    return new TripleIndexDescription(theIndex, TripleValueType.valueOf(entry.getKey().getColumnFamily().toString()),
+                            entry.getKey().getColumnQualifier().toString());
+                }
+
+                public void remove() {
+                    iterator.remove();
+                }
+            };
+
+        } catch (TableNotFoundException e) {
+
+            logger.error("The prospector table was not found");
+        }
 
         return null;
     }

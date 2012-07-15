@@ -206,7 +206,6 @@ public class ProspectorController {
                                  @RequestParam(required = true)  TripleValueType indexType,
                                  @RequestParam(required = false) String dataType) throws IOException {
 
-        System.out.println("PROSPECT TIMES: " + prospectTimes);
         if(prospectTimes == null) {
 
             prospectTimes = Arrays.asList(new Long[]{service.getProspects(new Authorizations()).next()});

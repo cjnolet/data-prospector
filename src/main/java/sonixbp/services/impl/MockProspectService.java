@@ -4,6 +4,7 @@ import org.apache.accumulo.core.security.Authorizations;
 import sonixbp.TripleValueType;
 import sonixbp.domain.PredicateDescription;
 import sonixbp.domain.SchemaSnapshot;
+import sonixbp.domain.TripleIndexCountDescription;
 import sonixbp.domain.TripleIndexDescription;
 import sonixbp.services.ProspectService;
 
@@ -62,11 +63,11 @@ public class MockProspectService implements ProspectService{
         return Arrays.asList(new String[] { "gem://sensor", "gem://tipper", "gem://comment", "gem://activityGroup"}).iterator();
     }
 
-    public TripleIndexDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexCountDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
         return null;
     }
 
-    public TripleIndexDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexCountDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
         return null;
     }
 
