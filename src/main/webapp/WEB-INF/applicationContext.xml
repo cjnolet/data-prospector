@@ -25,6 +25,18 @@
         <constructor-arg index="2" ref="mockTripleGen"/>
     </bean>
 
+    <bean id="prospectorGenerator3" class="sonixbp.support.mock.MockProspectorGenerator" init-method="generateMockProspect">
+        <constructor-arg index="0" ref="accumuloConnector"/>
+        <constructor-arg index="1"><bean id="time" class="java.lang.System" factory-method="currentTimeMillis"/></constructor-arg>
+        <constructor-arg index="2" ref="mockTripleGen"/>
+    </bean>
+
+    <bean id="prospectorGenerator4" class="sonixbp.support.mock.MockProspectorGenerator" init-method="generateMockProspect">
+        <constructor-arg index="0" ref="accumuloConnector"/>
+        <constructor-arg index="1"><bean id="time" class="java.lang.System" factory-method="currentTimeMillis"/></constructor-arg>
+        <constructor-arg index="2" ref="mockTripleGen"/>
+    </bean>
+
 
     <bean id="accumuloConnector" class="sonixbp.support.AccumuloConnectorFactory" factory-method="getConnector">
         <constructor-arg index="0"><bean id="instance" class="org.apache.accumulo.core.client.mock.MockInstance"/></constructor-arg>

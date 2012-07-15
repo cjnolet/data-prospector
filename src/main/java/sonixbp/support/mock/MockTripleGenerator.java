@@ -8,11 +8,11 @@ import java.util.*;
 
 public class MockTripleGenerator {
 
-    private int numTriples = 500;
-    private List<String> typesAndSchemes = Arrays.asList(new String[] { "triple://person", "triple://place", "triple://thing", "triple://somethingElse" });
-    private List<String> predicates = Arrays.asList(new String[] { "triple://name", "triple://description", "triple://location" });
+    private int numTriples = 6;
+    private List<String> typesAndSchemes = Arrays.asList(new String[] { "triple://artifact", "triple://person", "triple://place", "triple://thing", "triple://somethingElse" });
+    private List<String> predicates = Arrays.asList(new String[] { "triple://name", "triple://description", "triple://location", "triple://activity", "triple://trend" });
     private List<String> visibilities = Arrays.asList(new String[] { "" });
-    private List<String> objects = Arrays.asList(new String[] { "object1", "object2", "object3" });
+    private List<String> objects = Arrays.asList(new String[] { "object1", "object2", "object3", "anotherObject1", "anObject1", "a fold in time" });
     private List<String> dataTypes = Arrays.asList(new String[] { "xsd:string", "xsd:integer"  });
 
     public MockTripleGenerator() { }

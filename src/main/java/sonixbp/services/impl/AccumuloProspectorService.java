@@ -113,6 +113,7 @@ public class AccumuloProspectorService implements ProspectService {
 
             List<Range> ranges = new ArrayList<Range>();
 
+            System.out.println(prospectTimes);
             for(Long time : prospectTimes) {
                 ranges.add(new Range(ProspectorMutationFactory.SCHEMA + ProspectorMutationFactory.DELIM + subject +
                             ProspectorMutationFactory.DELIM + time));
@@ -146,6 +147,14 @@ public class AccumuloProspectorService implements ProspectService {
                         entry.getKey().getColumnVisibility().toString(), type);
 
                 snapshot.addPredicate(description);
+            }
+
+            // Give a consistent result with at least the prospect times that were sent in- even if nothing exists
+            for(Long time : prospectTimes) {
+
+                if(snapshots.get(time) == null) {
+                    snapshots.put(time, new SchemaSnapshot(subject, time));
+                }
             }
 
             List<SchemaSnapshot> finalSnapshots = new ArrayList<SchemaSnapshot>();
@@ -257,7 +266,7 @@ public class AccumuloProspectorService implements ProspectService {
         Validate.notNull(dataType);
         Validate.notNull(auths);
 
-        List<TripleIndexCount> indexCounts = new ArrayList<TripleIndexCount>();
+        Map<Long, TripleIndexCount> indexCounts = new HashMap<Long, TripleIndexCount>();
         TripleIndexCountDescription description = new TripleIndexCountDescription(index, type,  dataType);
 
         try {
@@ -280,14 +289,24 @@ public class AccumuloProspectorService implements ProspectService {
             for(Map.Entry<Key,Value> entry : scanner) {
 
                 Long prospectTime = entry.getKey().getTimestamp();
-
-                TripleIndexCount indexCount = new TripleIndexCount(Long.parseLong(new String(entry.getValue().get())), prospectTime);
-                description.addIndexCount(indexCount);
+                indexCounts.put(prospectTime, new TripleIndexCount(Long.parseLong(new String(entry.getValue().get())), prospectTime));
             }
 
         } catch (TableNotFoundException e) {
 
             logger.error("The prospector table was not found");
+        }
+
+        for(Long time : prospectTimes) {
+
+            TripleIndexCount count = indexCounts.get(time);
+            if(count == null) {
+                description.addIndexCount(new TripleIndexCount(0, time));
+            }
+
+            else {
+                description.addIndexCount(count);
+            }
         }
 
         Collections.sort(description.getCounts());

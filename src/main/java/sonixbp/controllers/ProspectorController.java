@@ -104,7 +104,8 @@ public class ProspectorController {
         Collection<SchemaSnapshot> snapshots = new ArrayList<SchemaSnapshot>();
         if(prospectTimes != null) {
 
-            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, null, new Authorizations()));
+            System.out.println("PROSPECTTIMES: " + prospectTimes);
+            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, dataType, new Authorizations()));
         }
 
         else {
@@ -120,7 +121,7 @@ public class ProspectorController {
 
     /**
      * Returns the scheme/type pairs that contain a specific predicate. Datatype is optional but should be included
-     * if predicate is assumed to be a type other than string literal or uri literal.
+     * if predicate-in-question's value is assumed to be a type other than string literal or uri literal.
      * @param prospectTime
      * @param maxResults
      * @param predicate
