@@ -73,8 +73,8 @@ public class ProspectorMutationFactory {
         Mutation predicateMutation = new Mutation(TripleValueType.predicate + DELIM + triple.getPredicate() + DELIM + prospectTime);
         Mutation objectMutation = new Mutation(TripleValueType.object + DELIM + triple.getObject() + DELIM + prospectTime);
 
-        subjectMutation.put(new Text(COUNT), new Text(triple.getType()), new ColumnVisibility(triple.getVisibility()), prospectTime, buildCountValue(count));
-        predicateMutation.put(new Text(COUNT), new Text(triple.getType()), new ColumnVisibility(triple.getVisibility()), prospectTime, buildCountValue(count));
+        subjectMutation.put(new Text(COUNT), new Text("xsd:uri"), new ColumnVisibility(triple.getVisibility()), prospectTime, buildCountValue(count));
+        predicateMutation.put(new Text(COUNT), new Text("xsd:uri"), new ColumnVisibility(triple.getVisibility()), prospectTime, buildCountValue(count));
         objectMutation.put(new Text(COUNT), new Text(triple.getType()), new ColumnVisibility(triple.getVisibility()), prospectTime, buildCountValue(count));
 
         return Arrays.asList(new Mutation[] { subjectMutation, predicateMutation, objectMutation});

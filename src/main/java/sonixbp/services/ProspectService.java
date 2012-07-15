@@ -59,24 +59,26 @@ public interface ProspectService {
     /**
      * Returns a collection containing the counts for a given index (s/p/o) for a list of prospect times.
      * An optional datatype can further refine the results.
+     *
      * @param prospectTimes
      * @param type
      * @param index
      * @param dataType
      * @return
      */
-    Collection<TripleIndexCount> getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths);
+    TripleIndexDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns a count for a given index (s/p/o) for a single prospect time.
      * An optional datatype can further refine the results.
+     *
      * @param prospectTime
      * @param type
      * @param index
      * @param dataType
      * @return
      */
-    TripleIndexCount getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths);
+    TripleIndexDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths);
 
     /**
      * Returns the matches for a partial index (starts-with search). An optional TripleValueType and datatype can

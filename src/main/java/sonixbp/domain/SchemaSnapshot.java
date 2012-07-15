@@ -4,10 +4,10 @@ package sonixbp.domain;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class SchemaSnapshot {
+public class SchemaSnapshot implements Comparable<SchemaSnapshot> {
 
     String schemeAndType;
-    long prospectTime;
+    Long prospectTime;
     Collection<PredicateDescription> predicates;
 
     public SchemaSnapshot(String schemeAndType, long prospectTime) {
@@ -28,7 +28,7 @@ public class SchemaSnapshot {
         this.schemeAndType = schemeAndType;
     }
 
-    public long getProspectTime() {
+    public Long getProspectTime() {
         return prospectTime;
     }
 
@@ -44,4 +44,8 @@ public class SchemaSnapshot {
         this.predicates = predicates;
     }
 
+    public int compareTo(SchemaSnapshot schemaSnapshot) {
+
+        return schemaSnapshot.getProspectTime().compareTo(getProspectTime());
+    }
 }

@@ -3,11 +3,13 @@ package sonixbp.controllers;
 import org.apache.accumulo.core.security.Authorizations;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import sonixbp.TripleValueType;
 import sonixbp.domain.SchemaSnapshot;
+import sonixbp.domain.TripleIndexCount;
 import sonixbp.domain.TripleIndexDescription;
 import sonixbp.services.ProspectService;
 
@@ -27,6 +29,9 @@ public class ProspectorController {
 
         this.service = service;
     }
+
+    public ProspectorController() {
+        objectMapper.configure(SerializationConfig.Feature.WRITE_NULL_PROPERTIES, false);    }
 
 
     /**
@@ -173,8 +178,7 @@ public class ProspectorController {
             maxResults = MAX_RESULTS;
         }
 
-        Iterator<TripleIndexDescription> indexItr;
-        indexItr = service.getMatchesForPartialIndex(indexType, index, dataType, new Authorizations());
+        Iterator<TripleIndexDescription> indexItr = service.getMatchesForPartialIndex(indexType, index, dataType, new Authorizations());
 
         Collection<TripleIndexDescription> descriptions = new ArrayList<TripleIndexDescription>();
 
@@ -182,6 +186,7 @@ public class ProspectorController {
         while(count < maxResults && indexItr.hasNext()) {
 
             descriptions.add(indexItr.next());
+            count++;
         }
 
         return objectMapper.writeValueAsString(descriptions);
@@ -196,11 +201,32 @@ public class ProspectorController {
      */
     @RequestMapping(value = "/count", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public String getTripleCount(@RequestParam(required = false) Collection<Long> prospectTimes,
+    public String getTripleCount(@RequestParam(required = false) List<Long> prospectTimes,
                                  @RequestParam(required = true)  String index,
                                  @RequestParam(required = true)  TripleValueType indexType,
-                                 @RequestParam(required = false) String dataType) {
+                                 @RequestParam(required = false) String dataType) throws IOException {
 
-        return "COUNT";
+        System.out.println("PROSPECT TIMES: " + prospectTimes);
+        if(prospectTimes == null) {
+
+            prospectTimes = Arrays.asList(new Long[]{service.getProspects(new Authorizations()).next()});
+        }
+
+        // subjects & predicates are ALL uri
+        if(indexType.equals(TripleValueType.subject) || indexType.equals(TripleValueType.predicate)) {
+            dataType = "xsd:uri";
+        }
+
+        else {
+
+            // string literal assumed for default
+            if(dataType == null) {
+                dataType = "xsd:string";
+            }
+        }
+
+        TripleIndexDescription counts = service.getCountsForIndex(prospectTimes, indexType, index, dataType, new Authorizations());
+
+        return objectMapper.writeValueAsString(counts);
     }
 }

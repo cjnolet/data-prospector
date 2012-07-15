@@ -3,36 +3,15 @@ package sonixbp.domain;
 
 import sonixbp.TripleValueType;
 
-public class TripleIndexCount {
+public class TripleIndexCount implements Comparable<TripleIndexCount> {
 
-    TripleValueType type;
-    String index;
     long count;
-    long prospectTime;
+    Long prospectTime;
 
-    public TripleIndexCount(TripleValueType type, String index, long count, long prospectTime) {
-        this.type = type;
-        this.index = index;
+
+    public TripleIndexCount(long count, Long prospectTime) {
         this.count = count;
         this.prospectTime = prospectTime;
-
-
-    }
-
-    public TripleValueType getType() {
-        return type;
-    }
-
-    public void setType(TripleValueType type) {
-        this.type = type;
-    }
-
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
     }
 
     public long getCount() {
@@ -43,7 +22,7 @@ public class TripleIndexCount {
         this.count = count;
     }
 
-    public long getProspectTime() {
+    public Long getProspectTime() {
         return prospectTime;
     }
 
@@ -51,4 +30,7 @@ public class TripleIndexCount {
         this.prospectTime = prospectTime;
     }
 
+    public int compareTo(TripleIndexCount tripleIndexCount) {
+        return tripleIndexCount.getProspectTime().compareTo(getProspectTime());
+    }
 }

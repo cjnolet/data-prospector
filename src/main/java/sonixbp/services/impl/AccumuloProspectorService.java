@@ -7,6 +7,7 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.user.RegExFilter;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.commons.lang.Validate;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,6 @@ import sonixbp.services.ProspectService;
 import sonixbp.support.Constants;
 import sonixbp.support.ProspectorMutationFactory;
 
-import javax.xml.validation.Schema;
-import java.io.IOException;
 import java.util.*;
 
 
@@ -152,7 +151,12 @@ public class AccumuloProspectorService implements ProspectService {
                 snapshot.addPredicate(description);
             }
 
-            return snapshots.values();
+            List<SchemaSnapshot> finalSnapshots = new ArrayList<SchemaSnapshot>();
+            finalSnapshots.addAll(snapshots.values());
+
+            Collections.sort(finalSnapshots);
+
+            return finalSnapshots;
 
         } catch (TableNotFoundException e) {
 
@@ -247,9 +251,17 @@ public class AccumuloProspectorService implements ProspectService {
         return null;
     }
 
-    public Collection<TripleIndexCount> getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexDescription getCountsForIndex(List<Long> prospectTimes, TripleValueType type, String index, String dataType, Authorizations auths) {
+
+        Validate.notNull(type);
+        Validate.notNull(prospectTimes);
+        Validate.notEmpty(prospectTimes);
+        Validate.notNull(index);
+        Validate.notNull(dataType);
+        Validate.notNull(auths);
 
         List<TripleIndexCount> indexCounts = new ArrayList<TripleIndexCount>();
+        TripleIndexDescription description = new TripleIndexDescription(index, type,  dataType);
 
         try {
 
@@ -261,18 +273,19 @@ public class AccumuloProspectorService implements ProspectService {
                 ranges.add(new Range(type + ProspectorMutationFactory.DELIM + index + ProspectorMutationFactory.DELIM + time));
             }
 
+            scanner.setRanges(ranges);
+
             IteratorSetting setting = new IteratorSetting(15, "regex", RegExFilter.class);
             setting.addOption(RegExFilter.COLF_REGEX, ProspectorMutationFactory.COUNT);
             setting.addOption(RegExFilter.COLQ_REGEX, dataType);
-
             scanner.addScanIterator(setting);
 
             for(Map.Entry<Key,Value> entry : scanner) {
 
                 Long prospectTime = entry.getKey().getTimestamp();
 
-                TripleIndexCount indexCount = new TripleIndexCount(type, index, Long.parseLong(new String(entry.getValue().get())), prospectTime);
-                indexCounts.add(indexCount);
+                TripleIndexCount indexCount = new TripleIndexCount(Long.parseLong(new String(entry.getValue().get())), prospectTime);
+                description.addIndexCount(indexCount);
             }
 
         } catch (TableNotFoundException e) {
@@ -280,19 +293,13 @@ public class AccumuloProspectorService implements ProspectService {
             logger.error("The prospector table was not found");
         }
 
-        return indexCounts;
+        Collections.sort(description.getCounts());
+        return description;
     }
 
-    public TripleIndexCount getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
+    public TripleIndexDescription getCountForIndex(Long prospectTime, TripleValueType type, String index, String dataType, Authorizations auths) {
 
-        Collection<TripleIndexCount> indexCounts = getCountsForIndex(Arrays.asList(new Long[] { prospectTime }), type, index, dataType, auths);
-
-        if(indexCounts.size() > 0) {
-
-            return indexCounts.iterator().next();
-        }
-
-        return null;
+        return getCountsForIndex(Arrays.asList(new Long[] { prospectTime }), type, index, dataType, auths);
     }
 
     public Iterator<TripleIndexDescription> getMatchesForPartialIndex(TripleValueType type, String partialIndex, String dataType, Authorizations auths) {

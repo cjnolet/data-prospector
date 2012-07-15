@@ -6,6 +6,8 @@ import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.AggregatingIterator;
+import org.apache.accumulo.core.iterators.aggregation.StringSummation;
 import org.apache.accumulo.core.security.Authorizations;
 import sonixbp.domain.Triple;
 import sonixbp.support.Constants;
@@ -35,7 +37,7 @@ public class MockProspectorGenerator {
             try {
                 connector.tableOperations().create(Constants.PROSPECTOR_TABLE);
             } catch (Exception e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
     }
