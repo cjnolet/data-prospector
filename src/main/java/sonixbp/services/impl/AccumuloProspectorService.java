@@ -289,7 +289,15 @@ public class AccumuloProspectorService implements ProspectService {
             for(Map.Entry<Key,Value> entry : scanner) {
 
                 Long prospectTime = entry.getKey().getTimestamp();
-                indexCounts.put(prospectTime, new TripleIndexCount(Long.parseLong(new String(entry.getValue().get())), prospectTime));
+
+                TripleIndexCount count = indexCounts.get(prospectTime);
+                if(count != null) {
+                    count.increment(Long.parseLong(new String(entry.getValue().get())));
+                }
+
+                else {
+                    indexCounts.put(prospectTime, new TripleIndexCount(Long.parseLong(new String(entry.getValue().get())), prospectTime));
+                }
             }
 
         } catch (TableNotFoundException e) {
@@ -345,18 +353,63 @@ public class AccumuloProspectorService implements ProspectService {
 
             return new Iterator<TripleIndexDescription>() {
 
+                String currentIndex;
+                String currentDatatype;
+                String currentType;
+                String nextIndex;
+                String nextDatatype;
+                String nextType;
+
+                String nextFullIndex;
+                String currentFullIndex;
+
+                boolean hasNext;
+
                 public boolean hasNext() {
 
-                    return iterator.hasNext();
+                    if(nextFullIndex == null) {
+
+                        while(iterator.hasNext() && (nextFullIndex == null || nextFullIndex.equals(currentFullIndex))) {
+
+                            Map.Entry<Key,Value> entry = iterator.next();
+                            nextIndex = entry.getKey().getRow().toString().split(ProspectorMutationFactory.DELIM)[1];
+                            nextDatatype = entry.getKey().getColumnQualifier().toString();
+                            nextType = entry.getKey().getColumnFamily().toString();
+                            nextFullIndex = nextIndex + nextDatatype + nextType;
+                        }
+
+                        if(nextFullIndex != null && !nextFullIndex.equals(currentFullIndex)) {
+
+                            hasNext = true;
+                        }
+
+                        else {
+
+                            hasNext =  false;
+                        }
+
+                    }
+
+                    return hasNext;
                 }
 
                 public TripleIndexDescription next() {
 
-                    Map.Entry<Key,Value> entry = iterator.next();
-                    String theIndex = entry.getKey().getRow().toString().split(ProspectorMutationFactory.DELIM)[1];
+                    if(nextFullIndex == null) {
+                        hasNext();
+                    }
 
-                    return new TripleIndexDescription(theIndex, TripleValueType.valueOf(entry.getKey().getColumnFamily().toString()),
-                            entry.getKey().getColumnQualifier().toString());
+                    currentFullIndex = nextFullIndex;
+                    currentType = nextType;
+                    currentDatatype = nextDatatype;
+                    currentIndex = nextIndex;
+
+                    nextFullIndex = null;
+                    nextType = null;
+                    nextDatatype = null;
+                    nextIndex = null;
+
+                    return new TripleIndexDescription(currentIndex, TripleValueType.valueOf(currentType), currentDatatype);
                 }
 
                 public void remove() {

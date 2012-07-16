@@ -1,6 +1,7 @@
 package sonixbp.controllers;
 
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.commons.collections.ListUtils;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -12,7 +13,9 @@ import sonixbp.domain.SchemaSnapshot;
 import sonixbp.domain.TripleIndexCount;
 import sonixbp.domain.TripleIndexDescription;
 import sonixbp.services.ProspectService;
+import sonixbp.support.AuthStrategy;
 
+import javax.swing.event.ListSelectionEvent;
 import java.io.IOException;
 import java.util.*;
 
@@ -22,12 +25,19 @@ public class ProspectorController {
     private static final Integer MAX_RESULTS = 50;
 
     ProspectService service;
+    AuthStrategy authStrategy;
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     public void setProspectService(ProspectService service) {
 
         this.service = service;
+    }
+
+    @Autowired
+    public void setAuthStrategy(AuthStrategy authStrategy) {
+
+        this.authStrategy = authStrategy;
     }
 
     public ProspectorController() {
@@ -61,7 +71,7 @@ public class ProspectorController {
         System.out.println(String.format("%d-%d", startTime, stopTime));
 
 
-        Iterator<Long> prospectIter = startTime == null ? service.getProspects(new Authorizations()) :
+        Iterator<Long> prospectIter = startTime == null ? service.getProspects(normalizeAuths()) :
                 service.getProspectsInRange(startTime, stopTime, new Authorizations());
 
         Collection<Long> prospects = new ArrayList<Long>();
@@ -104,15 +114,14 @@ public class ProspectorController {
         Collection<SchemaSnapshot> snapshots = new ArrayList<SchemaSnapshot>();
         if(prospectTimes != null) {
 
-            System.out.println("PROSPECTTIMES: " + prospectTimes);
-            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, dataType, new Authorizations()));
+            snapshots.addAll(service.getSchemaSnapshots(prospectTimes, schemeAndType, dataType, normalizeAuths()));
         }
 
         else {
 
-            Iterator<Long> prospectIter = service.getProspects(new Authorizations());
+            Iterator<Long> prospectIter = service.getProspects(normalizeAuths());
             if(prospectIter.hasNext()) {
-                snapshots.add(service.getSchemaSnapshot(prospectIter.next(), schemeAndType, dataType, new Authorizations()));
+                snapshots.add(service.getSchemaSnapshot(prospectIter.next(), schemeAndType, dataType, normalizeAuths()));
             }
         }
 
@@ -138,10 +147,10 @@ public class ProspectorController {
 
         if(prospectTime == null) {
 
-            prospectTime = service.getProspects(new Authorizations()).next();
+            prospectTime = service.getProspects(normalizeAuths()).next();
         }
 
-        Iterator<String> subjs = service.getTypesContainingPredicate(prospectTime, predicate, dataType, new Authorizations());
+        Iterator<String> subjs = service.getTypesContainingPredicate(prospectTime, predicate, dataType, normalizeAuths());
 
         Collection<String> subjects = new ArrayList<String>();
         if(maxResults == null) {
@@ -179,7 +188,7 @@ public class ProspectorController {
             maxResults = MAX_RESULTS;
         }
 
-        Iterator<TripleIndexDescription> indexItr = service.getMatchesForPartialIndex(indexType, index, dataType, new Authorizations());
+        Iterator<TripleIndexDescription> indexItr = service.getMatchesForPartialIndex(indexType, index, dataType, normalizeAuths());
 
         Collection<TripleIndexDescription> descriptions = new ArrayList<TripleIndexDescription>();
 
@@ -209,7 +218,7 @@ public class ProspectorController {
 
         if(prospectTimes == null) {
 
-            prospectTimes = Arrays.asList(new Long[]{service.getProspects(new Authorizations()).next()});
+            prospectTimes = Arrays.asList(new Long[]{service.getProspects(normalizeAuths()).next()});
         }
 
         // subjects & predicates are ALL uri
@@ -225,8 +234,27 @@ public class ProspectorController {
             }
         }
 
-        TripleIndexDescription counts = service.getCountsForIndex(prospectTimes, indexType, index, dataType, new Authorizations());
+        TripleIndexDescription counts = service.getCountsForIndex(prospectTimes, indexType, index, dataType, normalizeAuths());
 
         return objectMapper.writeValueAsString(counts);
+    }
+
+    private Authorizations normalizeAuths() {
+
+        String authString = "";
+
+        List<String> authsList = authStrategy.getAuthorizations();
+        for(int i = 0; i < authsList.size(); i++) {
+
+            authString += authsList.get(i);
+
+            if(i < authsList.size() - 1) {
+                authString += ",";
+            }
+        }
+
+        System.out.println(authString);
+
+        return new Authorizations(authString.getBytes());
     }
 }

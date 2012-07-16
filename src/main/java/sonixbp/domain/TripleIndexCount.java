@@ -14,6 +14,10 @@ public class TripleIndexCount implements Comparable<TripleIndexCount> {
         this.prospectTime = prospectTime;
     }
 
+    public void increment(Long amount) {
+        count += amount;
+    }
+
     public long getCount() {
         return count;
     }

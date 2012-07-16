@@ -36,6 +36,12 @@ public class MockProspectorGenerator {
         if(!connector.tableOperations().exists(Constants.PROSPECTOR_TABLE)) {
             try {
                 connector.tableOperations().create(Constants.PROSPECTOR_TABLE);
+                connector.securityOperations().createUser("username", "password".getBytes(), new Authorizations("U,FOUO".getBytes()));
+                connector.securityOperations().authenticateUser("username", "password".getBytes());
+
+                System.out.println("USER AUTHS: " + connector.securityOperations().getUserAuthorizations("username"));
+                System.out.println(connector.securityOperations().listUsers());
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -95,7 +101,7 @@ public class MockProspectorGenerator {
     private void debugTable() {
 
         try {
-            Scanner scanner = connector.createScanner(Constants.PROSPECTOR_TABLE, new Authorizations());
+            Scanner scanner = connector.createScanner(Constants.PROSPECTOR_TABLE, new Authorizations("U,FOUO".getBytes()));
 
             for(Map.Entry<Key,Value> entry : scanner) {
                 System.out.println(entry);

@@ -43,5 +43,7 @@
         <constructor-arg index="1" value="username"/>
         <constructor-arg index="2" value="password"/>
     </bean>
+
+    <bean id="authStrategy" class="sonixbp.support.mock.MockAuthStrategy"/>
 </beans>
 
